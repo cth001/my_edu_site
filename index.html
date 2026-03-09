@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web3 Information Aggregator</title>
+    <style>
+      :root {
+        --bg: #070b14;
+        --surface: #0f1726;
+        --surface-2: #121d31;
+        --line: #203050;
+        --text: #e6edf8;
+        --muted: #94a7c8;
+        --accent: #3ee7b7;
+        --accent-2: #3b82f6;
+        --warn: #f59e0b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+        background: radial-gradient(circle at 0% 0%, #121f39 0%, var(--bg) 45%), var(--bg);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 1rem;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.9rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(18, 29, 49, 0.75);
+        backdrop-filter: blur(8px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-weight: 700;
+      }
+
+      .brand .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 18px rgba(62, 231, 183, 0.6);
+      }
+
+      .ticker {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+      }
+
+      .price-pill {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.88rem;
+      }
+
+      .price-up {
+        color: var(--accent);
+      }
+
+      .layout {
+        margin-top: 1rem;
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 1rem;
+      }
+
+      .card {
+        background: rgba(15, 23, 38, 0.9);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 1rem;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      .hero {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .hero h1 {
+        font-size: clamp(1.5rem, 2.6vw, 2.3rem);
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .search {
+        margin-top: 0.7rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.6rem;
+      }
+
+      input,
+      select,
+      button {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: var(--surface-2);
+        color: var(--text);
+        padding: 0.66rem 0.75rem;
+        font-size: 0.92rem;
+      }
+
+      button {
+        cursor: pointer;
+        width: auto;
+        background: linear-gradient(135deg, #1f4de6, #2bd5a9);
+        border: 0;
+        font-weight: 600;
+      }
+
+      .filter-title {
+        margin-bottom: 0.65rem;
+        font-size: 1rem;
+      }
+
+      .check-group {
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .check input {
+        width: 16px;
+        height: 16px;
+        accent-color: #1fd3b4;
+      }
+
+      .news-grid {
+        margin-top: 1rem;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1rem;
+      }
+
+      .news-card {
+        grid-column: span 6;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      }
+
+      .news-card:hover {
+        transform: translateY(-2px);
+        border-color: #3b82f6;
+      }
+
+      .meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.6rem;
+        font-size: 0.8rem;
+      }
+
+      .badge {
+        padding: 0.28rem 0.5rem;
+        border-radius: 999px;
+        color: #d9e8ff;
+        font-weight: 600;
+      }
+
+      .b1 { background: #213f88; }
+      .b2 { background: #6241a7; }
+      .b3 { background: #0a5f5b; }
+
+      .news-card h3 {
+        margin-bottom: 0.45rem;
+        line-height: 1.35;
+        font-size: 1.02rem;
+      }
+
+      .news-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .news-card a {
+        margin-top: 0.8rem;
+        display: inline-block;
+        color: #79b5ff;
+        text-decoration: none;
+        font-size: 0.88rem;
+      }
+
+      .highlight {
+        margin-top: 1rem;
+        border: 1px solid #24497e;
+        background: linear-gradient(140deg, #10213d 0%, #0b1a2f 100%);
+      }
+
+      .stat-row {
+        margin-top: 0.85rem;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.6rem;
+      }
+
+      .stat {
+        background: rgba(5, 14, 27, 0.72);
+        border: 1px solid #1e365a;
+        border-radius: 10px;
+        padding: 0.7rem;
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 1.1rem;
+        margin-bottom: 0.15rem;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .news-card {
+          grid-column: span 12;
+        }
+      }
+
+      @media (max-width: 680px) {
+        .search {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="topbar">
+        <div class="brand">
+          <span class="dot"></span>
+          <span>Web3 Information Aggregator</span>
+        </div>
+        <div class="ticker">
+          <div class="price-pill">BTC: <strong>$67,482.12</strong> <span class="price-up">+1.93%</span></div>
+          <div class="price-pill">ETH: <strong>$3,456.30</strong> <span class="price-up">+2.61%</span></div>
+          <div class="price-pill">Updated: 11:42 UTC</div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <aside class="card">
+          <h2 class="filter-title">Filters</h2>
+
+          <div class="check-group">
+            <strong class="muted">Sources</strong>
+            <label class="check"><input type="checkbox" checked /> 律动 (The Block)</label>
+            <label class="check"><input type="checkbox" checked /> CoinDesk</label>
+            <label class="check"><input type="checkbox" checked /> Cointelegraph</label>
+          </div>
+
+          <hr style="border-color: #1f2f4c; margin: 1rem 0" />
+
+          <div class="check-group">
+            <strong class="muted">Categories</strong>
+            <label class="check"><input type="checkbox" checked /> News</label>
+            <label class="check"><input type="checkbox" checked /> Social</label>
+            <label class="check"><input type="checkbox" checked /> Regulatory</label>
+            <label class="check"><input type="checkbox" /> Forum</label>
+            <label class="check"><input type="checkbox" /> Media</label>
+          </div>
+
+          <hr style="border-color: #1f2f4c; margin: 1rem 0" />
+
+          <strong class="muted">Time Range</strong>
+          <select style="margin-top: 0.5rem">
+            <option>Last 1 hour</option>
+            <option selected>Last 24 hours</option>
+            <option>Last 7 days</option>
+          </select>
+        </aside>
+
+        <section>
+          <div class="card hero">
+            <h1>Stay Ahead of Web3 Markets, Policy, and Narrative Shifts</h1>
+            <p>
+              Unified intelligence stream from 律动, CoinDesk, and Cointelegraph with configurable source filters,
+              relevance ranking, and live market context.
+            </p>
+            <div class="search">
+              <input placeholder="Search news, tokens, protocols, regulations..." />
+              <button>Search</button>
+            </div>
+          </div>
+
+          <div class="card highlight">
+            <h2 style="font-size: 1.1rem">Live Intelligence Snapshot</h2>
+            <div class="stat-row">
+              <div class="stat">
+                <strong>127</strong>
+                <span class="muted">Articles in the last 24h</span>
+              </div>
+              <div class="stat">
+                <strong>18</strong>
+                <span class="muted">Regulatory updates tracked</span>
+              </div>
+              <div class="stat">
+                <strong>94%</strong>
+                <span class="muted">Deduplication confidence</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="news-grid">
+            <article class="card news-card">
+              <div class="meta">
+                <span class="badge b1">CoinDesk</span>
+                <span class="muted">15 min ago • High relevance</span>
+              </div>
+              <h3>SEC Signals New Timeline for Spot ETF Review as Market Liquidity Rises</h3>
+              <p>
+                Regulators released an updated review schedule that may accelerate institutional decision-making and shift
+                short-term market volatility across major assets.
+              </p>
+              <a href="#">Read original article →</a>
+            </article>
+
+            <article class="card news-card">
+              <div class="meta">
+                <span class="badge b2">Cointelegraph</span>
+                <span class="muted">29 min ago • Medium relevance</span>
+              </div>
+              <h3>Layer-2 Transaction Volume Hits Monthly High as Fees Stay Compressed</h3>
+              <p>
+                Ethereum scaling networks posted a strong increase in throughput, reflecting renewed user activity in DeFi,
+                gaming, and on-chain social applications.
+              </p>
+              <a href="#">Read original article →</a>
+            </article>
+
+            <article class="card news-card">
+              <div class="meta">
+                <span class="badge b3">律动</span>
+                <span class="muted">41 min ago • High relevance</span>
+              </div>
+              <h3>监管动态：亚洲主要市场更新稳定币合规框架与披露要求</h3>
+              <p>
+                多地监管机构公布新指引，重点覆盖储备透明度、跨境支付合规及发行人信息披露，对稳定币项目合规路径产生直接影响。
+              </p>
+              <a href="#">阅读原文 →</a>
+            </article>
+
+            <article class="card news-card">
+              <div class="meta">
+                <span class="badge b1">CoinDesk</span>
+                <span class="muted">1 hour ago • Medium relevance</span>
+              </div>
+              <h3>Bitcoin Miners Diversify Into AI Compute to Stabilize Revenue Cycles</h3>
+              <p>
+                Public mining companies continue expanding into data-center hosting and AI workloads, aiming to reduce
+                dependence on post-halving block reward economics.
+              </p>
+              <a href="#">Read original article →</a>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

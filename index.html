@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web3 Information Aggregator</title>
+    <style>
+      :root {
+        --bg: #070b14;
+        --surface: #0f1726;
+        --surface-2: #121d31;
+        --line: #203050;
+        --text: #e6edf8;
+        --muted: #94a7c8;
+        --accent: #3ee7b7;
+        --accent-2: #3b82f6;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+        background: radial-gradient(circle at 0% 0%, #121f39 0%, var(--bg) 45%), var(--bg);
+        color: var(--text);
+      }
+      .container { max-width: 1320px; margin: 0 auto; padding: 1rem; }
+      .topbar {
+        display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+        padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 14px;
+        background: rgba(18, 29, 49, 0.75); backdrop-filter: blur(8px);
+      }
+      .brand { display: flex; align-items: center; gap: 0.7rem; font-weight: 700; }
+      .brand .dot {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 18px rgba(62, 231, 183, 0.6);
+      }
+      .ticker { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+      .price-pill {
+        border: 1px solid var(--line); background: var(--surface);
+        padding: 0.45rem 0.7rem; border-radius: 999px; font-size: 0.88rem;
+      }
+      .price-up { color: var(--accent); }
+      .price-down { color: #f87171; }
+      .layout { margin-top: 1rem; display: grid; grid-template-columns: 300px 1fr; gap: 1rem; }
+      .card {
+        background: rgba(15, 23, 38, 0.9); border: 1px solid var(--line);
+        border-radius: 14px; padding: 1rem;
+      }
+      h1,h2,h3 { margin: 0; }
+      .hero { display: grid; gap: 1rem; }
+      .hero h1 { font-size: clamp(1.4rem, 2.6vw, 2.2rem); }
+      .hero p { margin: 0; color: var(--muted); }
+      .search-row { display: grid; grid-template-columns: 1fr auto auto; gap: 0.6rem; }
+      input, select, button {
+        width: 100%; border-radius: 10px; border: 1px solid var(--line);
+        background: var(--surface-2); color: var(--text); padding: 0.66rem 0.75rem; font-size: 0.92rem;
+      }
+      button {
+        cursor: pointer; width: auto;
+        background: linear-gradient(135deg, #1f4de6, #2bd5a9);
+        border: 0; font-weight: 600;
+      }
+      .subtle-btn { background: #1a2943; border: 1px solid #27436f; }
+      .filter-title { margin-bottom: 0.65rem; font-size: 1rem; }
+      .section-label { color: var(--muted); font-size: 0.84rem; margin-bottom: 0.4rem; display: inline-block; }
+      .check-group { display: grid; gap: 0.5rem; }
+      .check { display: flex; align-items: center; gap: 0.55rem; color: var(--muted); font-size: 0.9rem; }
+      .check input { width: 16px; height: 16px; accent-color: #1fd3b4; }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+      .muted { color: var(--muted); font-size: 0.84rem; }
+      .highlight {
+        margin-top: 1rem; border: 1px solid #24497e;
+        background: linear-gradient(140deg, #10213d 0%, #0b1a2f 100%);
+      }
+      .stat-row { margin-top: 0.85rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+      .stat {
+        background: rgba(5, 14, 27, 0.72); border: 1px solid #1e365a;
+        border-radius: 10px; padding: 0.7rem;
+      }
+      .stat strong { display: block; font-size: 1.1rem; margin-bottom: 0.15rem; }
+      .news-grid { margin-top: 1rem; display: grid; grid-template-columns: repeat(12, 1fr); gap: 1rem; }
+      .news-card {
+        grid-column: span 6; transition: transform 0.2s ease, border-color 0.2s ease;
+        display: grid; gap: 0.55rem;
+      }
+      .news-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+      .meta { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.8rem; }
+      .badge { padding: 0.28rem 0.5rem; border-radius: 999px; color: #d9e8ff; font-weight: 600; }
+      .b1 { background: #213f88; } .b2 { background: #6241a7; } .b3 { background: #0a5f5b; }
+      .tag { border: 1px solid #2d4368; border-radius: 999px; padding: 0.15rem 0.5rem; font-size: 0.76rem; color: #9eb3d5; }
+      .news-card h3 { line-height: 1.35; font-size: 1.02rem; }
+      .news-card p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+      .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+      .actions button { padding: 0.4rem 0.65rem; font-size: 0.82rem; }
+      .empty { text-align: center; color: var(--muted); padding: 1.5rem 0.5rem; }
+      .divider { border-color: #1f2f4c; margin: 1rem 0; }
+      @media (max-width: 980px) {
+        .layout { grid-template-columns: 1fr; }
+        .news-card { grid-column: span 12; }
+        .stat-row { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 680px) {
+        .search-row { grid-template-columns: 1fr; }
+        .stat-row { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="topbar">
+        <div class="brand"><span class="dot"></span><span>Web3 Information Aggregator</span></div>
+        <div class="ticker">
+          <div class="price-pill">BTC: <strong id="btc-price">-</strong> <span id="btc-change" class="price-up">-</span></div>
+          <div class="price-pill">ETH: <strong id="eth-price">-</strong> <span id="eth-change" class="price-up">-</span></div>
+          <div class="price-pill">Updated: <span id="price-updated">-</span></div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <aside class="card">
+          <h2 class="filter-title">Filters</h2>
+          <div class="check-group" id="source-filters"></div>
+          <hr class="divider" />
+          <div class="check-group" id="category-filters"></div>
+          <hr class="divider" />
+          <span class="section-label">Time Range</span>
+          <select id="time-filter">
+            <option value="1h">Last 1 hour</option>
+            <option value="24h" selected>Last 24 hours</option>
+            <option value="7d">Last 7 days</option>
+          </select>
+          <div style="height:.7rem"></div>
+          <span class="section-label">Sort By</span>
+          <select id="sort-filter">
+            <option value="date_desc">Newest</option>
+            <option value="relevance_desc">Relevance</option>
+            <option value="source_asc">Source</option>
+          </select>
+        </aside>
+
+        <section>
+          <div class="card hero">
+            <h1>Stay Ahead of Web3 Markets, Policy, and Narrative Shifts</h1>
+            <p>实时聚合律动、CoinDesk 与 Cointelegraph 的资讯流，支持去重、搜索、过滤和相关度排序。</p>
+            <div class="search-row">
+              <input id="search-input" placeholder="Search news, tokens, protocols, regulations..." />
+              <button id="search-btn">Search</button>
+              <button id="clear-btn" class="subtle-btn">Clear</button>
+            </div>
+            <div class="row">
+              <span class="muted" id="result-summary">0 results</span>
+              <span class="muted">Auto refresh: news 5 min / prices 45 sec</span>
+            </div>
+          </div>
+
+          <div class="card highlight">
+            <h2 style="font-size: 1.1rem">Live Intelligence Snapshot</h2>
+            <div class="stat-row">
+              <div class="stat"><strong id="stat-total">0</strong><span class="muted">Unique articles</span></div>
+              <div class="stat"><strong id="stat-reg">0</strong><span class="muted">Regulatory updates</span></div>
+              <div class="stat"><strong id="stat-high">0</strong><span class="muted">High relevance</span></div>
+              <div class="stat"><strong id="stat-read">0</strong><span class="muted">Read tracked</span></div>
+            </div>
+          </div>
+
+          <div id="news-grid" class="news-grid"></div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const SOURCE_STYLES = {
+        "CoinDesk": "b1",
+        "Cointelegraph": "b2",
+        "律动": "b3"
+      };
+
+      const ALL_ARTICLES = [
+        { id: "cd-1", source: "CoinDesk", category: "News", title: "SEC Signals New Timeline for Spot ETF Review as Market Liquidity Rises", summary: "Regulators released an updated review schedule that may accelerate institutional decision-making and shift short-term market volatility.", url: "#", publishedAt: minutesAgo(15), relevance: 93 },
+        { id: "ct-1", source: "Cointelegraph", category: "News", title: "Layer-2 Transaction Volume Hits Monthly High as Fees Stay Compressed", summary: "Ethereum scaling networks posted a strong increase in throughput, reflecting renewed user activity in DeFi and gaming.", url: "#", publishedAt: minutesAgo(29), relevance: 84 },
+        { id: "lb-1", source: "律动", category: "Regulatory", title: "监管动态：亚洲主要市场更新稳定币合规框架与披露要求", summary: "多地监管机构公布新指引，重点覆盖储备透明度、跨境支付合规及发行人信息披露。", url: "#", publishedAt: minutesAgo(41), relevance: 95 },
+        { id: "cd-2", source: "CoinDesk", category: "News", title: "Bitcoin Miners Diversify Into AI Compute to Stabilize Revenue Cycles", summary: "Public mining companies expand into data-center hosting and AI workloads to reduce dependence on post-halving economics.", url: "#", publishedAt: minutesAgo(62), relevance: 77 },
+        { id: "ct-2", source: "Cointelegraph", category: "Social", title: "Influencers Debate Restaking Risk After New LST Incident", summary: "A major staking community thread raises concerns around slashing assumptions in popular restaking protocols.", url: "#", publishedAt: minutesAgo(88), relevance: 72 },
+        { id: "lb-2", source: "律动", category: "Forum", title: "社区热议：模块化区块链在亚洲开发者生态的落地机会", summary: "开发者论坛聚焦数据可用性层、Rollup 基础设施和跨链消息标准化。", url: "#", publishedAt: hoursAgo(6), relevance: 68 },
+        { id: "dup-cd1", source: "CoinDesk", category: "News", title: "Layer-2 Transaction Volume Hits Monthly High as Fees Stay Compressed", summary: "Duplicate of a widely distributed wire item. Should be deduplicated by title.", url: "#", publishedAt: minutesAgo(27), relevance: 62 },
+        { id: "ct-3", source: "Cointelegraph", category: "Media", title: "Podcast: Macro Liquidity and Crypto Correlations This Quarter", summary: "Market analysts discuss dollar liquidity, treasury yields, and spillover effects into BTC/ETH.", url: "#", publishedAt: hoursAgo(28), relevance: 64 }
+      ];
+
+      const state = {
+        search: "",
+        sources: new Set(["CoinDesk", "Cointelegraph", "律动"]),
+        categories: new Set(["News", "Social", "Regulatory", "Forum", "Media"]),
+        timeRange: "24h",
+        sort: "date_desc",
+        read: new Set(JSON.parse(localStorage.getItem("readSet") || "[]")),
+        favorites: new Set(JSON.parse(localStorage.getItem("favSources") || "[]")),
+        lastBtc: null,
+        lastEth: null
+      };
+
+      const sourceFiltersEl = document.getElementById("source-filters");
+      const categoryFiltersEl = document.getElementById("category-filters");
+      const gridEl = document.getElementById("news-grid");
+
+      initFilterUI();
+      attachEvents();
+      render();
+      refreshPrices();
+      setInterval(refreshPrices, 45000);
+      setInterval(simulateNewsFetch, 300000);
+
+      function minutesAgo(min) { return new Date(Date.now() - min * 60 * 1000).toISOString(); }
+      function hoursAgo(h) { return new Date(Date.now() - h * 60 * 60 * 1000).toISOString(); }
+
+      function initFilterUI() {
+        sourceFiltersEl.innerHTML = `<span class="section-label">Sources</span>` +
+          ["CoinDesk", "Cointelegraph", "律动"].map(src => {
+            const checked = state.sources.has(src) ? "checked" : "";
+            const star = state.favorites.has(src) ? "★" : "☆";
+            return `<div class="row"><label class="check"><input data-source="${src}" type="checkbox" ${checked}/> ${src}</label><button class="subtle-btn" data-fav="${src}">${star}</button></div>`;
+          }).join("");
+
+        categoryFiltersEl.innerHTML = `<span class="section-label">Categories</span>` +
+          ["News", "Social", "Regulatory", "Forum", "Media"].map(cat => {
+            const checked = state.categories.has(cat) ? "checked" : "";
+            return `<label class="check"><input data-category="${cat}" type="checkbox" ${checked}/> ${cat}</label>`;
+          }).join("");
+      }
+
+      function attachEvents() {
+        sourceFiltersEl.addEventListener("change", (e) => {
+          if (e.target.dataset.source) {
+            const s = e.target.dataset.source;
+            e.target.checked ? state.sources.add(s) : state.sources.delete(s);
+            render();
+          }
+        });
+        sourceFiltersEl.addEventListener("click", (e) => {
+          if (e.target.dataset.fav) {
+            const src = e.target.dataset.fav;
+            state.favorites.has(src) ? state.favorites.delete(src) : state.favorites.add(src);
+            localStorage.setItem("favSources", JSON.stringify([...state.favorites]));
+            initFilterUI();
+          }
+        });
+
+        categoryFiltersEl.addEventListener("change", (e) => {
+          if (e.target.dataset.category) {
+            const c = e.target.dataset.category;
+            e.target.checked ? state.categories.add(c) : state.categories.delete(c);
+            render();
+          }
+        });
+
+        document.getElementById("time-filter").addEventListener("change", (e) => {
+          state.timeRange = e.target.value; render();
+        });
+        document.getElementById("sort-filter").addEventListener("change", (e) => {
+          state.sort = e.target.value; render();
+        });
+        document.getElementById("search-btn").addEventListener("click", applySearch);
+        document.getElementById("search-input").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") applySearch();
+        });
+        document.getElementById("clear-btn").addEventListener("click", () => {
+          document.getElementById("search-input").value = "";
+          state.search = "";
+          render();
+        });
+      }
+
+      function applySearch() {
+        state.search = document.getElementById("search-input").value.trim().toLowerCase();
+        render();
+      }
+
+      function getFilteredArticles() {
+        const deduped = dedupeByTitle(ALL_ARTICLES);
+        const threshold = state.timeRange === "1h" ? 60 * 60 * 1000 : state.timeRange === "24h" ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+
+        let items = deduped.filter(a => {
+          if (!state.sources.has(a.source)) return false;
+          if (!state.categories.has(a.category)) return false;
+          if ((now - new Date(a.publishedAt).getTime()) > threshold) return false;
+          if (!state.search) return true;
+          const hay = `${a.title} ${a.summary} ${a.source} ${a.category}`.toLowerCase();
+          return hay.includes(state.search);
+        });
+
+        if (state.sort === "date_desc") {
+          items.sort((a,b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+        } else if (state.sort === "relevance_desc") {
+          items.sort((a,b) => b.relevance - a.relevance || new Date(b.publishedAt) - new Date(a.publishedAt));
+        } else if (state.sort === "source_asc") {
+          items.sort((a,b) => a.source.localeCompare(b.source));
+        }
+
+        items.sort((a,b) => (state.favorites.has(b.source) - state.favorites.has(a.source)) || 0);
+        return items;
+      }
+
+      function dedupeByTitle(items) {
+        const map = new Map();
+        for (const item of items) {
+          const key = item.title.trim().toLowerCase();
+          if (!map.has(key) || new Date(item.publishedAt) > new Date(map.get(key).publishedAt)) map.set(key, item);
+        }
+        return [...map.values()];
+      }
+
+      function render() {
+        const items = getFilteredArticles();
+        document.getElementById("result-summary").textContent = `${items.length} results`;
+
+        document.getElementById("stat-total").textContent = items.length;
+        document.getElementById("stat-reg").textContent = items.filter(i => i.category === "Regulatory").length;
+        document.getElementById("stat-high").textContent = items.filter(i => i.relevance >= 85).length;
+        document.getElementById("stat-read").textContent = [...state.read].length;
+
+        if (!items.length) {
+          gridEl.innerHTML = `<div class="card empty" style="grid-column: span 12">No matching articles. Try broader filters.</div>`;
+          return;
+        }
+
+        gridEl.innerHTML = items.map(item => {
+          const read = state.read.has(item.id);
+          return `
+            <article class="card news-card">
+              <div class="meta">
+                <span class="badge ${SOURCE_STYLES[item.source] || 'b1'}">${item.source}</span>
+                <span class="muted">${timeAgo(item.publishedAt)} • relevance ${item.relevance}</span>
+              </div>
+              <div class="row">
+                <span class="tag">${item.category}</span>
+                ${read ? '<span class="tag">Read</span>' : ''}
+              </div>
+              <h3>${item.title}</h3>
+              <p>${item.summary}</p>
+              <div class="actions">
+                <a href="${item.url}" target="_blank" rel="noreferrer" style="color:#79b5ff;text-decoration:none;font-size:.88rem">Read original →</a>
+                <button class="subtle-btn" data-read="${item.id}">${read ? 'Mark unread' : 'Mark read'}</button>
+              </div>
+            </article>`;
+        }).join("");
+
+        gridEl.querySelectorAll("button[data-read]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const id = btn.dataset.read;
+            state.read.has(id) ? state.read.delete(id) : state.read.add(id);
+            localStorage.setItem("readSet", JSON.stringify([...state.read]));
+            render();
+          });
+        });
+      }
+
+      function timeAgo(iso) {
+        const diff = Date.now() - new Date(iso).getTime();
+        const min = Math.floor(diff / 60000);
+        if (min < 60) return `${min} min ago`;
+        const hr = Math.floor(min / 60);
+        if (hr < 24) return `${hr} hour${hr > 1 ? 's' : ''} ago`;
+        const day = Math.floor(hr / 24);
+        return `${day} day${day > 1 ? 's' : ''} ago`;
+      }
+
+      async function refreshPrices() {
+        try {
+          const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd");
+          const data = await res.json();
+          setPrice("btc", data.bitcoin.usd);
+          setPrice("eth", data.ethereum.usd);
+          document.getElementById("price-updated").textContent = new Date().toLocaleTimeString("en-GB", { hour12: false });
+        } catch {
+          // keep UI stable when network or API limits fail
+        }
+      }
+
+      function setPrice(symbol, value) {
+        const key = symbol === "btc" ? "lastBtc" : "lastEth";
+        const prev = state[key];
+        const diffPct = prev ? (((value - prev) / prev) * 100) : 0;
+        const diffText = `${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%`;
+        const cls = diffPct >= 0 ? "price-up" : "price-down";
+
+        document.getElementById(`${symbol}-price`).textContent = `$${Number(value).toLocaleString()}`;
+        const changeEl = document.getElementById(`${symbol}-change`);
+        changeEl.textContent = diffText;
+        changeEl.className = cls;
+        state[key] = value;
+      }
+
+      function simulateNewsFetch() {
+        const n = Math.floor(Math.random() * 1000);
+        ALL_ARTICLES.unshift({
+          id: `sim-${n}`,
+          source: ["CoinDesk", "Cointelegraph", "律动"][n % 3],
+          category: ["News", "Regulatory", "Social"][n % 3],
+          title: `Live update #${n}: Macro and on-chain flows evolve`,
+          summary: "Simulated polling update for frontend behavior; replace with backend API integration in next step.",
+          url: "#",
+          publishedAt: new Date().toISOString(),
+          relevance: 70 + (n % 30)
+        });
+        render();
+      }
+    </script>
+  </body>
+</html>
